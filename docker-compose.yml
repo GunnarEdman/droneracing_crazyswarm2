@@ -1,0 +1,14 @@
+# docker-compose.yml
+services:
+  ros:
+    build: .
+    image: cs2-jazzy-base:dev
+    container_name: cs2
+    network_mode: "host"
+    environment:
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - ROS_DOMAIN_ID=0
+    volumes:
+      - ./ros2_ws:/ws:rw
+    stdin_open: true
+    tty: true
