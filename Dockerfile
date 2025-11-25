@@ -15,7 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     swig \
     ros-jazzy-tf-transformations \
     ros-jazzy-rmw-cyclonedds-cpp \
+    ros-dev-tools \
+    cffirmware \
     && rm -rf /var/lib/apt/lists/*
+    
 
 # Create a venv and add env path
 RUN python3 -m venv /opt/pyvenv
