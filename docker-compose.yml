@@ -8,6 +8,10 @@ services:
     environment:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - ROS_DOMAIN_ID=0
+      # Cfirmware setup for SIL drone sim
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      # ---------------------------------
     volumes:
       - ./ros2_ws:/ws:rw
     stdin_open: true
