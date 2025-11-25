@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-tf-transformations \
     ros-jazzy-rmw-cyclonedds-cpp \
     ros-dev-tools \
-    cffirmware \
+    # cffirmware \
     && rm -rf /var/lib/apt/lists/*
     
 
