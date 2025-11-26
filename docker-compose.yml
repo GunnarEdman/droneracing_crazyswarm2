@@ -4,7 +4,9 @@ services:
     build: .
     image: cs2-jazzy-base:dev
     container_name: cs2
-    network_mode: "host"
+    # network_mode: "host"
+    ports:
+      - "8080:8080"
     environment:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - ROS_DOMAIN_ID=0
