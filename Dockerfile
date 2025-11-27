@@ -64,17 +64,11 @@ ENV ROS_DOMAIN_ID=0
 # Set working directory
 WORKDIR /ws
 
-RUN rosdep update    
+RUN rosdep update
 
-# Entrypoint (sources ROS and python venv on container start automatically)
-ENTRYPOINT ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && \
-            source /opt/pyvenv/bin/activate && \
-            exec bash"]
+# Source ROS and workspace setup.bash in root bashrc (this executes each time a new shell is started)
+RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc && \
+    echo "if [ -f /ws/install/setup.bash ]; then source /ws/install/setup.bash; fi" >> /root/.bashrc
 
-
-
-# Alternative ENTRYPOINT setup that also sources the workspace setup.bash if it exists
-# ENTRYPOINT ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && \
-# source /opt/pyvenv/bin/activate && \
-# if [ -f /ws/install/setup.bash ]; then source /ws/install/setup.bash; fi && \
-# exec bash"]
+# Entrypoint (sources ROS setup on container start)
+ENTRYPOINT ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && exec bash"]

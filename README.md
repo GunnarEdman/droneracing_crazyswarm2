@@ -60,3 +60,9 @@ docker compose stop
 # "Decompose" the container (run on host in the same dir as the compose.yaml file, it stops it and removes the container cs2). Useful to run before composing a new image.
 docker compose down
 ```
+
+## Building custom packages
+To build a specific packages in the workspace, for instance cs2_test packages, run:
+```bash
+colcon build --packages-select cs2_test --symlink-install
+```

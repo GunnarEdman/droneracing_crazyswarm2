@@ -1,0 +1,21 @@
+ROS Node Setup
+
+Create the ROS Node
+cd /ws/src
+ros2 pkg create --build-type ament_python cs2_test --dependencies rclpy crazyflie_interfaces
+
+Edit the setup.py
+Insert the code in the file below.
+
+Create the test script
+cd cs2_test/cs2_test
+touch minimal_test.py
+Insert the code in the file below
+
+Make the script executable 
+chmod +x /ws/src/cs2_test/cs2_test/minimal_test.py
+
+To rebuild only the test stuff
+cd /ws
+colcon build --packages-select cs2_test --merge-install
+source install/setup.bash

@@ -1,0 +1,78 @@
+###############################################
+# 3. CLONE & BUILD CRAZYFLIE FIRMWARE BINDINGS (run once)
+###############################################
+
+cd ~/main/acad/Project_course
+
+# Clone crazyflie-firmware (if not already cloned)
+git clone --recursive https://github.com/bitcraze/crazyflie-firmware.git
+
+# Install build deps for bindings
+sudo apt update
+sudo apt install -y build-essential swig python3-dev cmake ninja-build gcc-arm-none-eabi
+
+cd crazyflie-firmware
+
+# Clean, configure, and build Python bindings
+make clean
+make cf2_defconfig
+make bindings_python PYTHON=python3
+
+# Check the compiled module exists
+cd build
+ls _cffirmware*.so   # should show something like _cffirmware.cpython-312-x86_64-linux-gnu.so
+
+
+###############################################
+# 4. VERIFY PYTHON MODULES (cffirmware & rowan)
+###############################################
+
+# Back to workspace
+cd ~/main/acad/Project_course/ros2_ws
+
+# Activate venv
+source .venv/bin/activate
+
+# Add firmware build dir to PYTHONPATH
+export PYTHONPATH=$PYTHONPATH:$HOME/main/acad/Project_course/crazyflie-firmware/build
+
+# Source ROS 2 + workspace
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+
+# Check imports
+python -c "import rowan; print('rowan OK')"
+python -c "import cffirmware; print('cffirmware OK')"
+
+
+###############################################
+# 5. RUN CRAZYSWARM2 IN SIM MODE (TERMINAL 1)
+###############################################
+# (For every new terminal, you need the env setup.)
+
+# In a NEW TERMINAL:
+cd ~/main/acad/Project_course/ros2_ws
+source .venv/bin/activate
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+export PYTHONPATH=$PYTHONPATH:$HOME/main/acad/Project_course/crazyflie-firmware/build
+export ROS_DOMAIN_ID=10
+
+# Start sim backend without mocap
+ros2 launch crazyflie launch.py backend:=sim mocap:=False
+
+
+###############################################
+# 6. RUN hello_world EXAMPLE (TERMINAL 2)
+###############################################
+
+# In ANOTHER NEW TERMINAL:
+cd ~/main/acad/Project_course/ros2_ws
+source .venv/bin/activate
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+export PYTHONPATH=$PYTHONPATH:$HOME/main/acad/Project_course/crazyflie-firmware/build
+export ROS_DOMAIN_ID=10
+
+# Run the example script in sim
+ros2 run crazyflie_examples hello_world --ros-args -p use_sim_time:=True
