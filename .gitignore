@@ -4,6 +4,8 @@ install/
 log/
 ros2_ws/src/crazyswarm2/
 ros2_ws/src/motion_capture_tracking/
+ros2_ws/cache/
+ros2_ws/.venv/
 
 # Python
 __pycache__/
