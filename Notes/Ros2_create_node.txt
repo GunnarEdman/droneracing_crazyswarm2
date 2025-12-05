@@ -19,3 +19,4 @@ To rebuild only the test stuff
 cd /ws
 colcon build --packages-select cs2_test --merge-install
 source install/setup.bash
+

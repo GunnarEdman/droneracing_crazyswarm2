@@ -1,0 +1,50 @@
+ 
+================================================================
+QUALISYS CAMERA SETUP CHECKLIST (USB ADAPTER / LAPTOP)
+================================================================
+
+PHASE 1: PHYSICAL CONNECTION
+[ ] Connect USB Adapter to Laptop (USB 3.0 Port).
+[ ] Connect Ethernet Cable from Adapter to Qualisys Switch.
+[ ] Power ON Cameras and Switch.
+[ ] DISABLE Laptop WiFi (Airplane mode or turn off WiFi adapter).
+    *Prevents Windows from confused routing.
+
+PHASE 2: WINDOWS IP CONFIGURATION (CRITICAL)
+*Do not rely on the Wizard. Do this manually in Windows.*
+[ ] Open Control Panel -> Network and Sharing Center -> Change Adapter Settings.
+[ ] Right-click USB Ethernet Adapter -> Properties.
+[ ] Uncheck "IPv6".
+[ ] Double-click "IPv4".
+[ ] Select "Use the following IP address":
+    IP Address:      192.168.254.1
+    Subnet Mask:     255.255.255.0
+    Default Gateway: (LEAVE EMPTY)
+[ ] Click OK -> OK.
+
+PHASE 3: ADAPTER DRIVER SETTINGS (FOR UGREEN/REALTEK)
+*Prevents dropped frames and disconnection.*
+[ ] Open Device Manager -> Network Adapters.
+[ ] Double-click the USB GbE Family Controller.
+[ ] Go to "Advanced" tab.
+[ ] Setting: "Energy Efficient Ethernet" (or Green Ethernet) -> DISABLED.
+[ ] Setting: "Jumbo Packet" (or Jumbo Frame) -> 9KB MTU (or 9014 Bytes).
+    *If 9KB not available, select 4KB or highest option.*
+[ ] Click OK.
+[ ] Wait 10 seconds for adapter to reset.
+
+PHASE 4: FIREWALL
+[ ] Open "Windows Defender Firewall".
+[ ] Turn OFF Firewall for "Private" and "Public" networks temporarily.
+
+PHASE 5: STARTUP SEQUENCE
+[ ] Unplug the power cable to the Camera Switch (or Cameras).
+[ ] Wait 10 seconds.
+[ ] Plug power back in. (Forces cameras to reboot and ask for new IP).
+[ ] Open QTM (Qualisys Track Manager).
+[ ] Check connection.
+
+TROUBLESHOOTING
+* If "Received 0 packets": Re-check IP is 192.168.254.1.
+* If Cameras connect but video lags/crashes: Re-check Jumbo Frames is ON.
+================================================================

@@ -66,3 +66,7 @@ To build a specific packages in the workspace, for instance cs2_test packages, r
 ```bash
 colcon build --packages-select cs2_test --symlink-install
 ```
+
+
+## Usage of Crazyflie drone with CS2 container
+In order for the crazylink to be discovered inside of the container, one has to plug in the crazylink usb device to the host computer BEFORE starting the container at all. The /dev/bus/usb/ path is only refreshed upon container launch... 

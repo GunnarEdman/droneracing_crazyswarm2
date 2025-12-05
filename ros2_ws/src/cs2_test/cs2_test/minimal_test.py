@@ -34,4 +34,24 @@ try:
 except KeyboardInterrupt:
     pass
 
+# # Example that doen't use pose (not finished, only testing)
+# try:
+#     while rclpy.ok():
+#         for x, y in square_points:
+#             msg = FullState()
+#             # msg.pose.position.x = x
+#             # msg.pose.position.y = y
+#             # msg.pose.position.z = z_hover
+#             msg.twist.linear.x = linear_speed
+#             msg.twist.linear.y = linear_speed
+#             msg.twist.linear.z = 0.0
+#             pub.publish(msg)
+#             node.get_logger().info(f"Sent move: X={x:.1f}, Y={y:.1f}, Z={z_hover:.1f}")
+#             rclpy.spin_once(node, timeout_sec=1.5)
+# except KeyboardInterrupt:
+#     pass
+
+
+
+
 rclpy.shutdown()

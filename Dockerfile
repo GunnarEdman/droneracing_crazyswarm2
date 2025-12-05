@@ -20,10 +20,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Cfirmware setup for SIL drone sim
     gcc-arm-none-eabi \
     cmake \
-    ninja-build \    
+    ninja-build \
     # ---------------------------------
+    # # RQT & GUI DEPENDENCIES
+    # ros-jazzy-rqt-common-plugins \
+    # ros-jazzy-rqt \
+    # libxcb-cursor0 \
+    # libxcb-xinerama0 \
+    # libxkbcommon-x11-0 \
+    # MOCAP dependencies
+    libpcl-dev \
+    libeigen3-dev \
+    ros-jazzy-eigen3-cmake-module \
     && rm -rf /var/lib/apt/lists/*
-    
+
 
 # Create a venv and add env path
 RUN python3 -m venv /opt/pyvenv
@@ -72,3 +82,10 @@ RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc && \
 
 # Entrypoint (sources ROS setup on container start)
 ENTRYPOINT ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && exec bash"]
+
+
+
+# TODO
+#    - Modify location of cffirmware for the drone
+#    - Move config files to a custom package
+#    - Custom launch files for cs2
