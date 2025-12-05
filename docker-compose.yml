@@ -4,10 +4,12 @@ services:
     build: .
     image: cs2-jazzy-base:dev
     container_name: cs2
-    network_mode: "host"
-    privileged: true
-    # ports:
-    #   - "8080:8080"
+    # network_mode: "host"
+    # privileged: true
+    ports:
+      - "8080:8080"        # NiceGUI
+      - "22223:22223"      # QTM v1.1+ (Little Endian) - MAIN PORT
+      - "22222:22222"      # QTM v1.0 (Legacy) - FALLBACK
     environment:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - ROS_DOMAIN_ID=0

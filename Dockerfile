@@ -22,12 +22,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     ninja-build \
     # ---------------------------------
-    # # RQT & GUI DEPENDENCIES
-    # ros-jazzy-rqt-common-plugins \
-    # ros-jazzy-rqt \
-    # libxcb-cursor0 \
-    # libxcb-xinerama0 \
-    # libxkbcommon-x11-0 \
     # MOCAP dependencies
     libpcl-dev \
     libeigen3-dev \
