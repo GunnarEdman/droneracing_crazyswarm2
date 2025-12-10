@@ -38,8 +38,15 @@ docker exec -it cs2 bash
 Once inside the container, execute the build script located in the workspace to install ROS dependencies and build Crazyswarm2.
 
 ```bash
-/ws/cs2_build.sh
+bash /ws/cs2_build.sh
 ```
+
+For windwos users, if it fails to find the scrip, do this (but try bash first):
+```bash
+sed -i 's/\r$//' /ws/cs2_build.sh
+```
+
+
 
 ### Sourcing required inside container
 Only this sourcing is required inside the container when working  with cs2:
@@ -70,3 +77,5 @@ colcon build --packages-select cs2_test --symlink-install
 
 ## Usage of Crazyflie drone with CS2 container
 In order for the crazylink to be discovered inside of the container, one has to plug in the crazylink usb device to the host computer BEFORE starting the container at all. The /dev/bus/usb/ path is only refreshed upon container launch... 
+
+
