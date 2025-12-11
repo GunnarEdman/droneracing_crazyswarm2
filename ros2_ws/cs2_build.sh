@@ -4,7 +4,7 @@ set -e
 # Script that setups cs2 by first installing ros dependenceis, then building it
 cd /ws
 
-echo "Sourcing ROS 2"
+echo "\nSourcing ROS 2"
 source /opt/ros/jazzy/setup.bash
 
 echo "Updating package lists and installing missing dependencies"

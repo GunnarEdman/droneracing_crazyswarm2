@@ -46,10 +46,8 @@ For windwos users, if it fails to find the scrip, do this (but try bash first):
 sed -i 's/\r$//' /ws/cs2_build.sh
 ```
 
-
-
 ### Sourcing required inside container
-Only this sourcing is required inside the container when working  with cs2:
+Only this sourcing is required inside the container when working with cs2:
 ```bash
 source /ws/install/setup.bash
 ```
@@ -61,8 +59,13 @@ Some useful commands to work with the docker container using docker compose func
 # Exit the container
 exit
 
-# Stop the cotaienr temporarily (run on host)
+# Stop the container temporarily (run on host)
 docker compose stop
+# (or just docker stop)
+
+# Start the container
+docker compose start 
+# (or just docker start)
 
 # "Decompose" the container (run on host in the same dir as the compose.yaml file, it stops it and removes the container cs2). Useful to run before composing a new image.
 docker compose down
@@ -78,4 +81,10 @@ colcon build --packages-select cs2_test --symlink-install
 ## Usage of Crazyflie drone with CS2 container
 In order for the crazylink to be discovered inside of the container, one has to plug in the crazylink usb device to the host computer BEFORE starting the container at all. The /dev/bus/usb/ path is only refreshed upon container launch... 
 
+
+
+# Runnign simulation / cflib backends
+```bash
+ros2 launch crazyflie launch.py backend:=sim mocap:=False
+```
 

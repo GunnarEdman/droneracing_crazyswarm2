@@ -64,7 +64,7 @@ ENV PYTHONPATH="${PYTHONPATH}:/root/crazyflie-firmware/build"
 # Env configurations
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ENV ROS_DOMAIN_ID=0
-    
+
 # Set working directory
 WORKDIR /ws
 
