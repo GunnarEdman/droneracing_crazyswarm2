@@ -30,7 +30,7 @@ try:
             msg.twist.linear.z = 0.0
             pub.publish(msg)
             node.get_logger().info(f"Sent move: X={x:.1f}, Y={y:.1f}, Z={z_hover:.1f}")
-            rclpy.spin_once(node, timeout_sec=1.5)
+            rclpy.spin_once(node, timeout_sec=4)
 except KeyboardInterrupt:
     pass
 

@@ -40,6 +40,7 @@ Once inside the container, execute the build script located in the workspace to 
 ```bash
 bash /ws/cs2_build.sh
 ```
+source /ws/install/setup.bash
 
 For windwos users, if it fails to find the scrip, do this (but try bash first):
 ```bash
@@ -49,7 +50,6 @@ sed -i 's/\r$//' /ws/cs2_build.sh
 ### Sourcing required inside container
 Only this sourcing is required inside the container when working with cs2:
 ```bash
-source /ws/install/setup.bash
 ```
 
 ## Docker container commands
@@ -85,6 +85,20 @@ In order for the crazylink to be discovered inside of the container, one has to 
 
 # Runnign simulation / cflib backends
 ```bash
-ros2 launch crazyflie launch.py backend:=sim mocap:=False
+ros2 launch crazyflie launch.py backend:=sim
 ```
 
+```bash
+ros2 launch crazyflie launch.py backend:=cflib mocap:=false
+
+# Debugging:
+ros2 launch crazyflie launch.py backend:=cflib --ros-args --log-level DEBUG --log-level-rcl:=WARMING
+ros2 launch crazyflie launch.py backend:=cflib --debug
+```
+
+Some test nodes:
+
+```bash
+ros2 run cs2_test minimal_test
+ros2 run crazyflie_examples hello_world
+```
