@@ -1,7 +1,7 @@
 # docker-compose.yml
 services:
   ros:
-    # build:
+    build: .
     image: cs2-jazzy-base:dev
     container_name: cs2
     network_mode: "host"

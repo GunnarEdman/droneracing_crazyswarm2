@@ -1,4 +1,4 @@
-# Instructions for when connectign to QTM in the lab
+# Instructions for when connecting to QTM in the lab
 
 ## QTM computer general setup
 - Follow the setup that big daddy slim did
@@ -27,7 +27,7 @@
 ### Highlights from what Gunnar did 2025-12-12 to get it working 
 (how to get QTM data to publish to poses topic in cs2 inside container)
 
-- First obvious step is to connect to the same private network which the QTM PC is connected to!!!
+- First obvious step is to connect to the same private network which sthe QTM PC is connected to!!!
 
 - If you have a Linux firewall configured, disabled it as a sanity check (for isntance ```sudop ufw disable```).
 
