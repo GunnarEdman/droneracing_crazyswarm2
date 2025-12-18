@@ -7,6 +7,7 @@ ros2_ws/src/motion_capture_tracking/
 ros2_ws/cache/
 ros2_ws/*.csv
 ros2_ws/.venv/
+generate_code/
 
 # Python
 __pycache__/
