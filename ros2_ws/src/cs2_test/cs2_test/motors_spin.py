@@ -18,8 +18,7 @@ def main(args=None):
     
     node.get_logger().info("STARTING TEST (mimicking Xbox)...")
     
-    # 1. SEND ZERO (Critical for Safety Unlock)
-    # The firmware needs to see "0" before it accepts "20000"
+    # SEND ZERO (Critical for Safety Unlock)
     print("Sending ZERO to unlock...", flush=True)
     zero_msg = Twist()
     zero_msg.linear.z = 0.0
@@ -27,7 +26,7 @@ def main(args=None):
         pub.publish(zero_msg)
         time.sleep(0.1)
 
-    # 2. RAMP THRUST
+    # RAMP THRUST
     thrust_val = 13000.0
     msg = Twist()
     msg.linear.z = float(thrust_val)

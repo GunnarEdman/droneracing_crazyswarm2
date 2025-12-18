@@ -18,7 +18,7 @@ def acc2attitude(a_ref, psi, m, g):
     # Total thrust magnitude in N
     T_ref = m * math.sqrt(ax**2 + ay**2 + az_g**2)
 
-    # Using current Yaw to determine what roll and pitch we need
+    # Using current Yaw to determine what roll and pitch needed
 
     # ax*cos(psi) + ay*sin(psi) part is to undo the yaw rotation, that is to go
     # from world frame to body frame. The atan2 is used the roll and pitch.
@@ -76,13 +76,13 @@ def pure_pursuit_yaw(pos, path3, L):
     return psi_ref
 
 class DiscretePID:
-    def __init__(self, kp, ki, kd, output_limit, dt, filter_n=100.0):
+    def __init__(self, kp, ki, kd, upper_limit, dt, filter_N):
         self.kp = kp
         self.ki = ki
         self.kd = kd
-        self.limit = output_limit
+        self.limit = upper_limit
         self.dt = dt
-        self.n = filter_n
+        self.N = filter_N
         
         self.integral = 0.0
         self.prev_error = 0.0
@@ -95,76 +95,69 @@ class DiscretePID:
         # Integral with clamping
         self.integral += error * self.dt
         
-        # Dynamic integrator clamping
-        # Prevent windup if output is already saturated
+        # Integrator anti windup
+        # (Prevents windup if output is already saturated)
         i_term = self.ki * self.integral
         if abs(i_term) > self.limit:
             i_term = math.copysign(self.limit, i_term)
             self.integral = i_term / self.ki if self.ki != 0 else 0.0
 
         # Derivative with Low Pass Filter
-        # derivative = (error - prev_error) / dt
-        # filtered_d = (N * derivative + prev_filtered) / (1 + N*dt)? 
-        # Simpler implementation:
         raw_derivative = (error - self.prev_error) / self.dt
-        d_term = self.prev_derivative + (self.n * self.dt * (raw_derivative - self.prev_derivative))
+        d_term = self.prev_derivative + (self.N * self.dt * (raw_derivative - self.prev_derivative))
         
         # Apply gains
-        output = p_term + i_term + (self.kd * d_term)
+        u = p_term + i_term + (self.kd * d_term)
         
         # Final Saturation
-        output = max(min(output, self.limit), -self.limit)
+        u = max(min(u, self.limit), -self.limit)
         
         self.prev_error = error
         self.prev_derivative = d_term
         
-        return output
+        return u
 
 
-# =============================== Controller ===============================
+# =============================== Controller Node ===============================
 class PIDPositionController(Node):
     def __init__(self):
         super().__init__('pos_controller_node')
         
-        # 1. HARDCODED GLOBAL PARAMS (From your Matlab snippet)
-        self.m = 0.033
+        #  Parameters
+        self.m = 0.009 #0.032  # Drone mass in kg
         self.g = 9.81
         self.rate = 50.0
+        self.max_thrust = 0.95  # as fraction of max PWM
+        self.filter_N = 50.0    # Derivative LP filter constant (tune!!!!!!)
         self.dt = 1.0 / self.rate
         self.yawControl = False
 
-        # 2. HARDCODED GAINS (Kp, Ki, Kd, Limit)
-        # We manually create the dictionary so the PIDs can be initialized cleanly      
-        self.pid_x = DiscretePID(kp=13.5, ki=0.15, kd=0.15, output_limit=4.0, dt=self.dt)
-        self.pid_y = DiscretePID(kp=13.5, ki=0.15, kd=0.15, output_limit=4.0, dt=self.dt)
-        self.pid_z = DiscretePID(kp=8.0,  ki=3.0,  kd=0.15, output_limit=4.0, dt=self.dt)
-        self.pid_yaw = DiscretePID(kp=1.0, ki=0.0, kd=0.0,  output_limit=3.0, dt=self.dt)
+        # PIDs (Kp, Ki, Kd, Limit)
+        # self.pid_x = DiscretePID(kp=13.5, ki=0.15, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        # self.pid_y = DiscretePID(kp=13.5, ki=0.15, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        # self.pid_z = DiscretePID(kp=8.0,  ki=3.0,  kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        # self.pid_yaw = DiscretePID(kp=1.0, ki=0.0, kd=0.0,  upper_limit=3.0, dt=self.dt, filter_N=self.filter_N)
+        self.pid_x = DiscretePID(kp=13.5, ki=0.0, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        self.pid_y = DiscretePID(kp=13.5, ki=0.0, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        self.pid_z = DiscretePID(kp=8.0,  ki=0.0,  kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        self.pid_yaw = DiscretePID(kp=1.0, ki=0.0, kd=0.0,  upper_limit=3.0, dt=self.dt, filter_N=self.filter_N)
         
-        # Store them in a dict for the loop logic later if needed, 
-        # or just use self.pid_x directly in the loop. 
-        # (I will map them here so your main loop code doesn't break if it uses dict access)
-        self.pids = {
-            'x': self.pid_x,
-            'y': self.pid_y,
-            'z': self.pid_z,
-            'yaw': self.pid_yaw
-        }
-
-        # 3. CONVERSIONS
+        # Conversion factors
         self.newton_to_pwm = 1.0 / (0.06 * self.g / 65536.0)
         self.rad_to_deg = 180.0 / math.pi
 
-        # 4. STATE & ROS
+        # Internal states
         self.current_pos = np.zeros(3)
         self.current_yaw = 0.0
         self.target_pos = np.zeros(3)
         self.target_yaw = 0.0
         
-        self.state = "LOCKED" 
         self.unlock_start_time = 0.0
         self.received_first_pose = False
         self.received_first_cmd = False
+        self.last_pose_time = 0.0
         
+        # ROS2 Interfaces
         self.sub_pose = self.create_subscription(PoseStamped, '/cf231/pose', self.pose_cb, 10)
         self.sub_cmd = self.create_subscription(Position, '/cf231/cmd_position', self.cmd_cb, 10)
         self.pub_control = self.create_publisher(Twist, '/cf231/cmd_vel_legacy', 10)
@@ -174,6 +167,7 @@ class PIDPositionController(Node):
 
 
     def pose_cb(self, msg):
+        # Update pose data from QTM and convert to meters
         self.current_pos[0] = msg.pose.position.x / 100.0
         self.current_pos[1] = msg.pose.position.y / 100.0
         self.current_pos[2] = msg.pose.position.z / 100.0
@@ -184,8 +178,18 @@ class PIDPositionController(Node):
         self.current_yaw = math.atan2(siny_cosp, cosy_cosp)
         
         self.received_first_pose = True
+        self.last_pose_time = time.time()
 
     def cmd_cb(self, msg):
+        # This prevents "windup" that accumulated while sitting idle.
+        if not self.received_first_cmd:
+            self.pid_x.integral = 0.0
+            self.pid_y.integral = 0.0
+            self.pid_z.integral = 0.0
+            self.pid_yaw.integral = 0.0
+            self.get_logger().info("First Command Received: Resetting PID Integrals.")
+        # -----------------------------------------------        
+        
         self.target_pos[0] = msg.x
         self.target_pos[1] = msg.y
         self.target_pos[2] = msg.z
@@ -199,44 +203,54 @@ class PIDPositionController(Node):
             return
 
         now = time.time()
+
+        # ============== Dangerous safety checks (could crash drone ==============
+        # If mocap data lost for  more than 5 seconds, kill motors
+        if self.received_first_pose and (now - self.last_pose_time > 5.0):
+            self.get_logger().error("MOCAP LOST! Killing motors.")
+            self.send_twist(0.0, 0.0, 0.0, 0.0)
+            return
+        
+        # if self.target_pos[2] < 0.04 and self.current_pos[2] < 0.04:
+        #     self.send_twist(0.0, 0.0, 0.0, 0.0)
+        #     self.last_pid_time = now # Keep dt fresh
+        #     return
+        # ======================================================================
+        
         elapsed = now - self.unlock_start_time
 
-        # Arming Sequence (0 to 1s)
+        # Motor arming sequence (0 to 1s)
+        # (Drone must see zero commands before accepting non-zero thrust)
         if elapsed < 1.0:
             self.send_twist(0.0, 0.0, 0.0, 0.0)
             self.last_pid_time = now 
             return
 
-        # Ramp Up (1s to 3s)
-        # if elapsed < 3.0:
-        #     ramp_duration = 2.0
-        #     # progress = (elapsed - 1.0) / ramp_duration
-        #     # ramp_thrust = progress * 40000.0
-        #     self.send_twist(0.0, 0.0, 0.0, 0.0)
-        #     self.last_pid_time = now
-        #     return
-
-        # PID Control (After 3s)
+        # PID Control (After 1s)
         dt = now - self.last_pid_time
         self.last_pid_time = now
         
         if dt < 1e-6: return
 
+        # Position PIDs
         a_ref = np.zeros(3)
-        a_ref[0] = self.pids['x'].update(self.target_pos[0] - self.current_pos[0])
-        a_ref[1] = self.pids['y'].update(self.target_pos[1] - self.current_pos[1])
-        a_ref[2] = self.pids['z'].update(self.target_pos[2] - self.current_pos[2])
+        a_ref[0] = self.pid_x.update(self.target_pos[0] - self.current_pos[0])
+        a_ref[1] = self.pid_y.update(self.target_pos[1] - self.current_pos[1])
+        a_ref[2] = self.pid_z.update(self.target_pos[2] - self.current_pos[2])
 
+        # Convert desired acceleration to roll, pitch and base-thrust
         phi_ref, theta_ref, T_ref = acc2attitude(a_ref, self.current_yaw, self.m, self.g)
         
+        # yawRate PID
         if self.yawControl:
             yaw_err = self.target_yaw - self.current_yaw
             yaw_err = math.atan2(math.sin(yaw_err), math.cos(yaw_err))
-            yaw_rate_cmd = self.pids['yaw'].update(yaw_err)
+            yaw_rate_cmd = self.pid_yaw.update(yaw_err)
         else:
             yaw_rate_cmd = 0.0
 
-        thrust_pwm = max(0.0, min(T_ref * self.newton_to_pwm, 60000.0))
+        # 
+        thrust_pwm = max(0.0, min(T_ref * self.newton_to_pwm, 65535.0*self.max_thrust))
 
         self.send_twist(
             float(phi_ref * self.rad_to_deg),

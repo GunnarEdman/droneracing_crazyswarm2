@@ -103,7 +103,35 @@ ros2 run cs2_test minimal_test
 ros2 run crazyflie_examples hello_world
 ```
 
+## Running PID positio ncotnroller (custom one for LQR firmware in SSy191)
+```bash
+# Controller node (watch out, will add basethrust right away regadless of beign on grund):
+ros2 run cs2_test pid_pos_controller
+
+# Send exmaple positio nreferences  / trajectories to position controller
+ros2 run cs2_test trajecory_publisher
+```
+
+
 ## Arming crazyflie (needed with cpp backend)
 ```bash
 ros2 service call /cf231/arm crazyflie_interfaces/srv/Arm "{arm: true}"
+```
+
+# General advice 
+## Flashing the already built cf2.bin firmware in linux terminal
+This way, no compile is needed at all:
+```bash
+cfloader flash cf2.bin stm32-fw
+```
+
+Faking pose data on /pose topic:
+```bash
+ros2 topic pub /cf231/pose geometry_msgs/msg/PoseStamped '{header: {frame_id: "world"}, pose: {position: {x: 0.0, y: 0.0, z: 0.0}, orientation: {w: 1.0, x: 0.0, y: 0.0, z: 0.0}}}' -r 50
+```
+
+
+Sending positio reference to PID:
+```bash
+ros2 topic pub /cf231/cmd_position geometry_msgs/msg/PoseStamped '{header: {frame_id: "world"}, pose: {position: {x: 0.0, y: 0.0, z: 0.0}, orientation: {w: 1.0, x: 0.0, y: 0.0, z: 0.0}}}' -r 50
 ```
