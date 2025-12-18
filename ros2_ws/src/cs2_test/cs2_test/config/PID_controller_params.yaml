@@ -1,0 +1,31 @@
+/pos_controller_node:
+  ros__parameters:
+    mass: 0.032
+    gravity: 9.81
+    control_rate: 50.0
+
+    # Gains from Simulink Sim
+    pid_x: 
+      kp: 13.5  # 3 * 4.5
+      ki: 0.15
+      kd: 0.15
+      limit: 4.0 # x_acc_limit
+
+    pid_y: 
+      kp: 13.5  # 3 * 4.5
+      ki: 0.15
+      kd: 0.15
+      limit: 4.0 # y_acc_limit
+
+    pid_z: 
+      kp: 8.0   # 2 * 4
+      ki: 3.0   # 10 * 0.3
+      kd: 0.15
+      limit: 4.0 # z_acc_limit
+
+    # Yaw (Matlab had P=1, I,D=0)
+    pid_yaw: 
+      kp: 1.0
+      ki: 0.0
+      kd: 0.0
+      limit: 3.0 # Default safe limit

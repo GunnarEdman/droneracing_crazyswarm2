@@ -1,38 +1,50 @@
-import rclpy
-from rclpy.node import Node
-from crazyflie_interfaces.msg import FullState
-import time
+"""
+Takeoff, fly a square, land.
+Safe for real Crazyflie with Crazyswarm2 + mocap.
+"""
 
-rclpy.init()
-node = Node("formation_move")
-pub = node.create_publisher(FullState, "/cf231/cmd_full_state", 10)
-
-square_points = [
-    (0.0, 0.0),
-    (1.0, 0.0),
-    (1.0, 1.0),
-    (0.0, 1.0)
-]
-
-z_hover = 0.5
-linear_speed = 0.4
+from crazyflie_py import Crazyswarm
+import numpy as np
 
 
-try:
-    while rclpy.ok():
-        for x, y in square_points:
-            msg = FullState()
-            msg.pose.position.x = x
-            msg.pose.position.y = y
-            msg.pose.position.z = z_hover
-            msg.twist.linear.x = linear_speed
-            msg.twist.linear.y = linear_speed
-            msg.twist.linear.z = 0.0
-            pub.publish(msg)
-            node.get_logger().info(f"Sent move: X={x:.1f}, Y={y:.1f}, Z={z_hover:.1f}")
-            rclpy.spin_once(node, timeout_sec=4)
-except KeyboardInterrupt:
-    pass
+TAKEOFF_HEIGHT = 1.0
+TAKEOFF_DURATION = 2.5
+
+SIDE_LENGTH = 0.5      # meters
+LEG_DURATION = 3.0     # seconds per side
+
+HOVER_AFTER_TAKEOFF = 1.0
+HOVER_BEFORE_LAND = 1.0
 
 
-rclpy.shutdown()
+def main():
+    swarm = Crazyswarm()
+    timeHelper = swarm.timeHelper
+    cf = swarm.allcfs.crazyflies[0]
+
+    # --- Takeoff ---
+    cf.takeoff(targetHeight=TAKEOFF_HEIGHT, duration=TAKEOFF_DURATION)
+    timeHelper.sleep(TAKEOFF_DURATION + HOVER_AFTER_TAKEOFF)
+
+    # Reference position (world frame)
+    start_pos = np.array(cf.initialPosition) + np.array([0.0, 0.0, TAKEOFF_HEIGHT])
+
+    # Define square corners relative to start
+    square_offsets = [
+        np.array([0.0, 0.0, 0.0]),
+        np.array([SIDE_LENGTH, 0.0, 0.0]),
+        np.array([SIDE_LENGTH, SIDE_LENGTH, 0.0]),
+        np.array([0.0, SIDE_LENGTH, 0.0]),
+        np.array([0.0, 0.0, 0.0]),  # return to start
+    ]
+
+    # --- Fly square ---
+    for offset in square_offsets:
+        target_pos = start_pos + offset
+        cf.goTo(target_pos, yaw=0.0, duration=LEG_DURATION)
+        timeHelper.sleep(LEG_DURATION + 0.5)
+
+    # --- Land ---
+    timeHelper.sleep(HOVER_BEFORE_LAND)
+    cf.land(targetHeight=0.04, duration=2.5)
+    timeHelper.sleep(3.0)

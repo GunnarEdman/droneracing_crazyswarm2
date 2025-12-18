@@ -81,5 +81,6 @@ ENTRYPOINT ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && exec bash"]
 
 # TODO
 #    - Modify location of cffirmware for the drone
+#        - Move the the configureation code for SITL ouside of dockefile
 #    - Move config files to a custom package
 #    - Custom launch files for cs2

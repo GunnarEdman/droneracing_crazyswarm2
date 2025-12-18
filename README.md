@@ -50,11 +50,11 @@ sed -i 's/\r$//' /ws/cs2_build.sh
 ### Sourcing required inside container
 Only this sourcing is required inside the container when working with cs2:
 ```bash
+source install/setup.bash
 ```
 
 ## Docker container commands
 Some useful commands to work with the docker container using docker compose functionality.
-
 ```bash
 # Exit the container
 exit
@@ -101,4 +101,9 @@ Some test nodes:
 ```bash
 ros2 run cs2_test minimal_test
 ros2 run crazyflie_examples hello_world
+```
+
+## Arming crazyflie (needed with cpp backend)
+```bash
+ros2 service call /cf231/arm crazyflie_interfaces/srv/Arm "{arm: true}"
 ```
