@@ -65,12 +65,12 @@ class TrajectoryPublisher(Node):
                     [0.0, 0.0, 0.0],  # Start at 0
                     [0.0, 0.0, 0.0],  # hold
                     [0.0, 0.0, 0.9],  # Go to
-                    [0.0, 0.0, 0.9],  # Hold 
+                    [0.0, 0.0, 0.9],  # Hold
                     [0.0, 0.0, 0.0]   # Back to 0
                 ])
         
         # 0s: start, 2s: go up, 4s: land, 6s: finish
-        self.switch_times = np.array([0.0, 2.0, 4.0, 6.0, 8.0])
+        self.switch_times = np.array([0.0, 2.0, 4.0, 12.0, 16.0])
 
 
 

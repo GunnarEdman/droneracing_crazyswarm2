@@ -109,8 +109,9 @@ class DiscretePID:
             self.integral = i_term / self.ki if self.ki != 0 else 0.0
 
         # Derivative with Low Pass Filter
-        raw_derivative = (error - self.prev_error) / self.dt
-        d_term = self.prev_derivative + (self.N * self.dt * (raw_derivative - self.prev_derivative))
+        # raw_derivative = (error - self.prev_error) / self.dt
+        # d_term = self.prev_derivative + (self.N * self.dt * (raw_derivative - self.prev_derivative))
+        d_term = (error - self.prev_error) / self.dt
         
         # Apply gains
         u = p_term + i_term + (self.kd * d_term)
@@ -130,7 +131,7 @@ class PIDPositionController(Node):
         super().__init__('pos_controller_node')
         
         #  Parameters
-        self.m = 0.032  # Drone mass in kg
+        self.m = 0.045  # Drone mass in kg
         self.g = 9.81
         self.rate = 50.0
         self.max_thrust = 1.0  # as fraction of max PWM
@@ -248,10 +249,10 @@ class PIDPositionController(Node):
             self.send_twist(0.0, 0.0, 0.0, 0.0)
             return
         
-        if self.target_pos[2] < 0.04 and self.current_pos[2] < 0.03:
-            self.send_twist(0.0, 0.0, 0.0, 0.0)
-            self.last_pid_time = now # Keep dt fresh
-            return
+        # if self.target_pos[2] < 0.04 and self.current_pos[2] < 0.03:
+        #     self.send_twist(0.0, 0.0, 0.0, 0.0)
+        #     self.last_pid_time = now # Keep dt fresh
+        #     return
         # ======================================================================
         
         elapsed = now - self.unlock_start_time
