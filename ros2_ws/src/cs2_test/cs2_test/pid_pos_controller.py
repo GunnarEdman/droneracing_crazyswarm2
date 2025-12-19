@@ -6,6 +6,12 @@ import math
 import numpy as np
 import time
 
+# pose stuff
+from motion_capture_tracking_interfaces.msg import NamedPoseArray
+from geometry_msgs.msg import PoseStamped
+from rclpy.qos import qos_profile_sensor_data
+
+
 # ===================== Helper Functions =====================
 def acc2attitude(a_ref, psi, m, g):
     # OBS! Accelerations are in world frame
@@ -124,23 +130,23 @@ class PIDPositionController(Node):
         super().__init__('pos_controller_node')
         
         #  Parameters
-        self.m = 0.009 #0.032  # Drone mass in kg
+        self.m = 0.032  # Drone mass in kg
         self.g = 9.81
         self.rate = 50.0
-        self.max_thrust = 0.95  # as fraction of max PWM
+        self.max_thrust = 1.0  # as fraction of max PWM
         self.filter_N = 50.0    # Derivative LP filter constant (tune!!!!!!)
         self.dt = 1.0 / self.rate
         self.yawControl = False
 
         # PIDs (Kp, Ki, Kd, Limit)
-        # self.pid_x = DiscretePID(kp=13.5, ki=0.15, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
-        # self.pid_y = DiscretePID(kp=13.5, ki=0.15, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
-        # self.pid_z = DiscretePID(kp=8.0,  ki=3.0,  kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
-        # self.pid_yaw = DiscretePID(kp=1.0, ki=0.0, kd=0.0,  upper_limit=3.0, dt=self.dt, filter_N=self.filter_N)
-        self.pid_x = DiscretePID(kp=13.5, ki=0.0, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
-        self.pid_y = DiscretePID(kp=13.5, ki=0.0, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
-        self.pid_z = DiscretePID(kp=8.0,  ki=0.0,  kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        self.pid_x = DiscretePID(kp=13.5, ki=0.15, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        self.pid_y = DiscretePID(kp=13.5, ki=0.15, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        self.pid_z = DiscretePID(kp=8.0,  ki=3.0,  kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
         self.pid_yaw = DiscretePID(kp=1.0, ki=0.0, kd=0.0,  upper_limit=3.0, dt=self.dt, filter_N=self.filter_N)
+        # self.pid_x = DiscretePID(kp=13.5, ki=0.0, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        # self.pid_y = DiscretePID(kp=13.5, ki=0.0, kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        # self.pid_z = DiscretePID(kp=8.0,  ki=0.0,  kd=0.15, upper_limit=4.0, dt=self.dt, filter_N=self.filter_N)
+        # self.pid_yaw = DiscretePID(kp=1.0, ki=0.0, kd=0.0,  upper_limit=3.0, dt=self.dt, filter_N=self.filter_N)
         
         # Conversion factors
         self.newton_to_pwm = 1.0 / (0.06 * self.g / 65536.0)
@@ -158,7 +164,8 @@ class PIDPositionController(Node):
         self.last_pose_time = 0.0
         
         # ROS2 Interfaces
-        self.sub_pose = self.create_subscription(PoseStamped, '/cf231/pose', self.pose_cb, 10)
+        # self.sub_pose = self.create_subscription(PoseStamped, '/cf231/pose', self.pose_cb, 10)
+        self.sub_pose = self.create_subscription(NamedPoseArray, '/poses', self.pose_cb, qos_profile_sensor_data)
         self.sub_cmd = self.create_subscription(Position, '/cf231/cmd_position', self.cmd_cb, 10)
         self.pub_control = self.create_publisher(Twist, '/cf231/cmd_vel_legacy', 10)
         
@@ -166,19 +173,49 @@ class PIDPositionController(Node):
         self.get_logger().info(f"Controller started at {self.rate} Hz (Hardcoded Gains)")
 
 
+    # def pose_cb(self, msg):
+    #     # Update pose data from QTM and convert to meters
+    #     self.current_pos[0] = msg.pose.position.x / 100.0
+    #     self.current_pos[1] = msg.pose.position.y / 100.0
+    #     self.current_pos[2] = msg.pose.position.z / 100.0
+        
+    #     q = msg.pose.orientation
+    #     siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+    #     cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+    #     self.current_yaw = math.atan2(siny_cosp, cosy_cosp)
+        
+    #     self.received_first_pose = True
+    #     self.last_pose_time = time.time()
     def pose_cb(self, msg):
-        # Update pose data from QTM and convert to meters
-        self.current_pos[0] = msg.pose.position.x / 100.0
-        self.current_pos[1] = msg.pose.position.y / 100.0
-        self.current_pos[2] = msg.pose.position.z / 100.0
-        
-        q = msg.pose.orientation
-        siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
-        cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
-        self.current_yaw = math.atan2(siny_cosp, cosy_cosp)
-        
-        self.received_first_pose = True
-        self.last_pose_time = time.time()
+        # Iterate through all tracked objects to find the drone
+        found = False
+        for named_pose in msg.poses:
+            if named_pose.name == "cf231":
+                # Extract the pose object
+                p = named_pose.pose
+                
+                # --- CRITICAL: Check your units here ---
+                # If Qualisys is already sending meters (e.g. 0.025), remove the / 100.0
+                # If Qualisys is sending cm (e.g. 2.5), keep the / 100.0
+                self.current_pos[0] = p.position.x / 100.0 - 0.025
+                self.current_pos[1] = p.position.y / 100.0 - 0.025
+                self.current_pos[2] = p.position.z / 100.0 - 0.025
+                
+                # Extract orientation
+                q = p.orientation
+                siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+                cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+                self.current_yaw = math.atan2(siny_cosp, cosy_cosp)
+                
+                self.received_first_pose = True
+                self.last_pose_time = time.time()
+                found = True
+                break
+                
+        if not found:
+            # Optional: Print warning if drone is lost from MoCap
+            pass
+
 
     def cmd_cb(self, msg):
         # This prevents "windup" that accumulated while sitting idle.
@@ -211,10 +248,10 @@ class PIDPositionController(Node):
             self.send_twist(0.0, 0.0, 0.0, 0.0)
             return
         
-        # if self.target_pos[2] < 0.04 and self.current_pos[2] < 0.04:
-        #     self.send_twist(0.0, 0.0, 0.0, 0.0)
-        #     self.last_pid_time = now # Keep dt fresh
-        #     return
+        if self.target_pos[2] < 0.04 and self.current_pos[2] < 0.03:
+            self.send_twist(0.0, 0.0, 0.0, 0.0)
+            self.last_pid_time = now # Keep dt fresh
+            return
         # ======================================================================
         
         elapsed = now - self.unlock_start_time

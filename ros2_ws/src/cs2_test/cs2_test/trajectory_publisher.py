@@ -64,8 +64,8 @@ class TrajectoryPublisher(Node):
         self.pos_refs = np.array([
                     [0.0, 0.0, 0.0],  # Start at 0
                     [0.0, 0.0, 0.0],  # hold
-                    [0.0, 0.0, 1.0],  # Go to
-                    [0.0, 0.0, 1.0],  # Hold 
+                    [0.0, 0.0, 0.9],  # Go to
+                    [0.0, 0.0, 0.9],  # Hold 
                     [0.0, 0.0, 0.0]   # Back to 0
                 ])
         
